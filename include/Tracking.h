@@ -32,6 +32,7 @@
 #include "ORBVocabulary.h"
 #include "KeyFrameDatabase.h"
 #include "ORBextractor.h"
+#include "GCNExtractor.h"
 #include "MapDrawer.h"
 #include "System.h"
 #include "ImuTypes.h"
@@ -261,6 +262,9 @@ protected:
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
     ORBextractor* mpIniORBextractor;
 
+    //GCN
+    GCNExtractor* mpGCNExtractor;
+
     //BoW
     ORBVocabulary* mpORBVocabulary;
     KeyFrameDatabase* mpKeyFrameDB;
@@ -334,6 +338,8 @@ protected:
 
     //Color order (true RGB, false BGR, ignored if grayscale)
     bool mbRGB;
+
+    bool mbUseDeepFeatures = false;
 
     list<MapPoint*> mlpTemporalPoints;
 

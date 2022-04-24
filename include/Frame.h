@@ -49,6 +49,7 @@ class KeyFrame;
 class ConstraintPoseImu;
 class GeometricCamera;
 class ORBextractor;
+class GCNExtractor;
 
 class Frame
 {
@@ -67,11 +68,15 @@ public:
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat &distCoef, const float &bf, const float &thDepth, Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
 
+    // Constructor for Monocular cameras.
+    Frame(const cv::Mat &imGray, const double &timeStamp, GCNExtractor* extractor,ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat &distCoef, const float &bf, const float &thDepth, Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
+
     // Destructor
     // ~Frame();
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(int flag, const cv::Mat &im, const int x0, const int x1);
+    void ExtractDeepFeatures(const cv::Mat &im);
 
     // Compute Bag of Words representation.
     void ComputeBoW();
@@ -191,6 +196,8 @@ public:
 
     // Vocabulary used for relocalization.
     ORBVocabulary* mpORBvocabulary;
+
+    GCNExtractor* mpGCNExtractor;
 
     // Feature extractor. The right is used only in the stereo case.
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;

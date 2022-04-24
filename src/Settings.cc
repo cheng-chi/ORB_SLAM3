@@ -448,6 +448,14 @@ namespace ORB_SLAM3 {
         nLevels_ = readParameter<int>(fSettings,"ORBextractor.nLevels",found);
         initThFAST_ = readParameter<int>(fSettings,"ORBextractor.iniThFAST",found);
         minThFAST_ = readParameter<int>(fSettings,"ORBextractor.minThFAST",found);
+        useGCNv2_ = (bool) readParameter<int>(fSettings,"ORBextractor.useGCNv2",found,false);
+        if (useGCNv2_) {
+            std::cout<<"Trying to use deep feature extractor\n";
+            gcnModelPath_ = readParameter<string>(fSettings,"ORBextractor.gcnModelPath",found,false);
+            if (gcnModelPath_ == "") {
+                std::cerr<<"Could not find parameter ORBextractor.gcnModelPath, however, useGCNv2 was set to true!";
+            }
+        }
     }
 
     void Settings::readViewer(cv::FileStorage &fSettings) {

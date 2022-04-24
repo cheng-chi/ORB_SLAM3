@@ -22,6 +22,7 @@
 #include "MapPoint.h"
 #include "KeyFrame.h"
 #include "ORBextractor.h"
+#include "GCNExtractor.h"
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include "GeometricCamera.h"
@@ -381,6 +382,101 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mpMutexImu = new std::mutex();
 }
 
+Frame::Frame(const cv::Mat &image, const double &timeStamp, GCNExtractor* extractor, ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat &distCoef, const float &bf, const float &thDepth, Frame* pPrevF, const IMU::Calib &ImuCalib)
+    :mpcpi(NULL),mpORBvocabulary(voc),mpGCNExtractor(extractor), mpORBextractorLeft(static_cast<ORBextractor*>(NULL)),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
+     mTimeStamp(timeStamp), mK(static_cast<Pinhole*>(pCamera)->toK()), mK_(static_cast<Pinhole*>(pCamera)->toK_()), mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
+     mImuCalib(ImuCalib), mpImuPreintegrated(NULL),mpPrevFrame(pPrevF),mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbIsSet(false), mbImuPreintegrated(false), mpCamera(pCamera),
+     mpCamera2(nullptr), mbHasPose(false), mbHasVelocity(false)
+{
+    // Frame ID
+    mnId=nNextId++;
+
+    // Scale Level Info
+    mnScaleLevels = mpGCNExtractor->GetLevels();
+    mfScaleFactor = mpGCNExtractor->GetScaleFactor();
+    mfLogScaleFactor = log(mfScaleFactor);
+    mvScaleFactors = mpGCNExtractor->GetScaleFactors();
+    mvInvScaleFactors = mpGCNExtractor->GetInverseScaleFactors();
+    mvLevelSigma2 = mpGCNExtractor->GetScaleSigmaSquares();
+    mvInvLevelSigma2 = mpGCNExtractor->GetInverseScaleSigmaSquares();
+
+    // ORB extraction
+#ifdef REGISTER_TIMES
+    std::chrono::steady_clock::time_point time_StartExtORB = std::chrono::steady_clock::now();
+#endif
+    ExtractDeepFeatures(image);
+#ifdef REGISTER_TIMES
+    std::chrono::steady_clock::time_point time_EndExtORB = std::chrono::steady_clock::now();
+
+    mTimeORB_Ext = std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(time_EndExtORB - time_StartExtORB).count();
+#endif
+
+
+    N = mvKeys.size();
+    if(mvKeys.empty())
+        return;
+
+    UndistortKeyPoints();
+
+    // Set no stereo information
+    mvuRight = vector<float>(N,-1);
+    mvDepth = vector<float>(N,-1);
+    mnCloseMPs = 0;
+
+    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
+
+    mmProjectPoints.clear();// = map<long unsigned int, cv::Point2f>(N, static_cast<cv::Point2f>(NULL));
+    mmMatchedInImage.clear();
+
+    mvbOutlier = vector<bool>(N,false);
+
+    // This is done only for the first Frame (or after a change in the calibration)
+    if(mbInitialComputations)
+    {
+        ComputeImageBounds(image);
+
+        mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
+        mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
+
+        fx = static_cast<Pinhole*>(mpCamera)->toK().at<float>(0,0);
+        fy = static_cast<Pinhole*>(mpCamera)->toK().at<float>(1,1);
+        cx = static_cast<Pinhole*>(mpCamera)->toK().at<float>(0,2);
+        cy = static_cast<Pinhole*>(mpCamera)->toK().at<float>(1,2);
+        invfx = 1.0f/fx;
+        invfy = 1.0f/fy;
+
+        mbInitialComputations=false;
+    }
+
+
+    mb = mbf/fx;
+
+    //Set no stereo fisheye information
+    Nleft = -1;
+    Nright = -1;
+    mvLeftToRightMatch = vector<int>(0);
+    mvRightToLeftMatch = vector<int>(0);
+    mvStereo3Dpoints = vector<Eigen::Vector3f>(0);
+    monoLeft = -1;
+    monoRight = -1;
+
+    AssignFeaturesToGrid();
+
+    if(pPrevF)
+    {
+        if(pPrevF->HasVelocity())
+        {
+            SetVelocity(pPrevF->GetVelocity());
+        }
+    }
+    else
+    {
+        mVw.setZero();
+    }
+
+    mpMutexImu = new std::mutex();
+}
+
 
 void Frame::AssignFeaturesToGrid()
 {
@@ -422,6 +518,11 @@ void Frame::ExtractORB(int flag, const cv::Mat &im, const int x0, const int x1)
         monoLeft = (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors,vLapping);
     else
         monoRight = (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight,vLapping);
+}
+
+void Frame::ExtractDeepFeatures(const cv::Mat& im) {
+    (*mpGCNExtractor)(im, cv::Mat(), mvKeys, mDescriptors);
+    monoLeft = -1;
 }
 
 bool Frame::isSet() const {

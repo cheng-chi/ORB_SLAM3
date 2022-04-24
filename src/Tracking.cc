@@ -591,14 +591,19 @@ void Tracking::newParameterLoader(Settings *settings) {
     int fIniThFAST = settings->initThFAST();
     int fMinThFAST = settings->minThFAST();
     float fScaleFactor = settings->scaleFactor();
+    if (settings->useGCNExtractor()) {
+        mpGCNExtractor = new GCNExtractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST, settings->gcnModelpath());
+        mbUseDeepFeatures = true;
+    } else {
+        mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
-    mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+        if(mSensor==System::STEREO || mSensor==System::IMU_STEREO)
+            mpORBextractorRight = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
-    if(mSensor==System::STEREO || mSensor==System::IMU_STEREO)
-        mpORBextractorRight = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+        if(mSensor==System::MONOCULAR || mSensor==System::IMU_MONOCULAR)
+            mpIniORBextractor = new ORBextractor(5*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+    }
 
-    if(mSensor==System::MONOCULAR || mSensor==System::IMU_MONOCULAR)
-        mpIniORBextractor = new ORBextractor(5*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
     //IMU parameters
     Sophus::SE3f Tbc = settings->Tbc();
@@ -1566,36 +1571,51 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename)
 {
     mImGray = im;
-    if(mImGray.channels()==3)
+    if(mImGray.channels()==3 && !mbUseDeepFeatures)
     {
         if(mbRGB)
             cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
         else
             cvtColor(mImGray,mImGray,cv::COLOR_BGR2GRAY);
     }
-    else if(mImGray.channels()==4)
+    else if(mImGray.channels()==4 && !mbUseDeepFeatures)
     {
         if(mbRGB)
             cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
         else
             cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
     }
-
     if (mSensor == System::MONOCULAR)
     {
-        if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET ||(lastID - initID) < mMaxFrames)
-            mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
-        else
-            mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+        if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET ||(lastID - initID) < mMaxFrames) {
+            if (mbUseDeepFeatures)
+                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+            else
+                mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+        }
+        else {
+            if (mbUseDeepFeatures)
+                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+            else
+                mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+        }
+
     }
     else if(mSensor == System::IMU_MONOCULAR)
     {
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
         {
-            mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+            if (mbUseDeepFeatures)
+                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+            else
+                mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
         }
-        else
-            mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+        else {
+            if (mbUseDeepFeatures)
+                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+            else
+                mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+        }
     }
 
     if (mState==NO_IMAGES_YET)
