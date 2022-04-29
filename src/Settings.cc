@@ -448,12 +448,12 @@ namespace ORB_SLAM3 {
         nLevels_ = readParameter<int>(fSettings,"ORBextractor.nLevels",found);
         initThFAST_ = readParameter<int>(fSettings,"ORBextractor.iniThFAST",found);
         minThFAST_ = readParameter<int>(fSettings,"ORBextractor.minThFAST",found);
-        useGCNv2_ = (bool) readParameter<int>(fSettings,"ORBextractor.useGCNv2",found,false);
-        if (useGCNv2_) {
+        useKP2D_ = (bool) readParameter<int>(fSettings,"ORBextractor.useKP2D",found,false);
+        if (useKP2D_) {
             std::cout<<"Trying to use deep feature extractor\n";
-            gcnModelPath_ = readParameter<string>(fSettings,"ORBextractor.gcnModelPath",found,false);
-            if (gcnModelPath_ == "") {
-                std::cerr<<"Could not find parameter ORBextractor.gcnModelPath, however, useGCNv2 was set to true!";
+            kp2dModelPath_ = readParameter<string>(fSettings,"ORBextractor.kp2dModelPath",found,false);
+            if (kp2dModelPath_ == "") {
+                std::cerr<<"Could not find parameter ORBextractor.kp2dModelPath, however, useKP2D was set to true!";
             }
         }
     }

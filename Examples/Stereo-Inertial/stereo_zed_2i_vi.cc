@@ -193,7 +193,7 @@ void LoadIMU(const string &strPathToSequence, vector<cv::Point3f> &acclData,
                     M_PI/180.f*(float)sensor_data["angular_velocity"][it.key()][2]);
         gyroData.push_back(gyro);
         const uint64_t t_ns = std::stod(it.key());
-        vTimestamps.push_back(t_ns);
+        vTimestamps.push_back(t_ns*1e-9);
     }
 
     for(const auto& it : sensor_data["linear_acceleration"].items()) {

@@ -64,8 +64,8 @@ ORBextractor.nLevels: 8
 # You can lower these values if your images have low contrast			
 ORBextractor.iniThFAST: 20
 ORBextractor.minThFAST: 7
-ORBextractor.useGCNv2: 1
-ORBextractor.gcnModelPath: "/home/steffen/Dokumente/ORB_SLAM3/Models/kp2d_resnet_traced_320_256.pt"
+ORBextractor.useKP2D: 1
+ORBextractor.kp2dModelPath: "/media/Data/projects/EfficientDeepMatching/kp2d_models/KeypointNetwithIOLoss_04_26_2022__07_57_39/keypointnet_model_traced_320_240.ckpt"
 #ORBextractor.gcnModelPath: "/home/steffen/Dokumente/ORB_SLAM3/Models/v4_original_traced_640_360.pt"
 #--------------------------------------------------------------------------------------------
 # Viewer Parameters

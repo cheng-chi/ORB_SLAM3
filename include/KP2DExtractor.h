@@ -18,8 +18,8 @@
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GCNEXTRACTOR_H
-#define GCNEXTRACTOR_H
+#ifndef KP2DEXTRACTOR_H
+#define KP2DEXTRACTOR_H
 
 #include <torch/script.h> // One-stop header.
 #include <torch/torch.h>
@@ -37,23 +37,20 @@
 namespace ORB_SLAM3
 {
 
-class GCNExtractor
+class KP2DExtractor
 {
 public:
     
     enum {HARRIS_SCORE=0, FAST_SCORE=1 };
 
-    GCNExtractor(int nfeatures, float scaleFactor, int nlevels,
+    KP2DExtractor(int nfeatures, float scaleFactor, int nlevels,
                  int iniThFAST, int minThFAST, std::string path_to_model);
 
-    ~GCNExtractor(){}
+    ~KP2DExtractor(){}
 
-    // Compute the ORB features and descriptors on an image.
-    // ORB are dispersed on the image using an octree.
-    // Mask is ignored in the current implementation.
-    void operator()( cv::InputArray image, cv::InputArray mask,
-                    std::vector<cv::KeyPoint>& keypoints,
-                    cv::OutputArray descriptors);
+
+    void detect(const cv::Mat& image, const cv::Mat &mask, std::vector<cv::KeyPoint>& keypoints,
+                cv::Mat& descriptors, float conf_thresh=0.2f);
 
     int inline GetLevels(){
         return nlevels;}
@@ -95,8 +92,8 @@ protected:
     std::vector<float> mvInvScaleFactor;    
     std::vector<float> mvLevelSigma2;
     std::vector<float> mvInvLevelSigma2;
+    std::string path_to_model_;
 
-    torch::jit::script::Module module;
 };
 
 } //namespace ORB_SLAM

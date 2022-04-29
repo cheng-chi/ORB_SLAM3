@@ -53,7 +53,7 @@
 *
 */
 
-#include "GCNExtractor.h"
+#include "KP2DExtractor.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -81,8 +81,8 @@ void nms(const cv::Mat& det, const cv::Mat& desc, const cv::Mat& score,
     std::vector<float> score_raw;
     for (int i = 0; i < det.rows; i++){
 
-        int u = (int) det.at<float>(i, 0);
-        int v = (int) det.at<float>(i, 1);
+        float u = det.at<float>(i, 0);
+        float v = det.at<float>(i, 1);
         // float conf = det.at<float>(i, 2);
 
         pts_raw.push_back(cv::Point2f(u, v));
@@ -159,7 +159,7 @@ void nms(const cv::Mat& det, const cv::Mat& desc, const cv::Mat& score,
     }
 }
 
-GCNExtractor::GCNExtractor(int _nfeatures, float _scaleFactor, int _nlevels,
+KP2DExtractor::KP2DExtractor(int _nfeatures, float _scaleFactor, int _nlevels,
          int _iniThFAST, int _minThFAST, std::string path_to_model):
     nfeatures(_nfeatures), scaleFactor(_scaleFactor), nlevels(_nlevels),
     iniThFAST(_iniThFAST), minThFAST(_minThFAST)
@@ -218,8 +218,11 @@ GCNExtractor::GCNExtractor(int _nfeatures, float _scaleFactor, int _nlevels,
 
     try {
       // Deserialize the ScriptModule from a file using torch::jit::load().
-      module = torch::jit::load(path_to_model);
-      std::cout<<"Loaded deep feature extractor\n";
+      //module = torch::jit::load(path_to_model);
+      path_to_model_ = path_to_model;
+      //module.to(torch::kCUDA);
+      //module.eval();
+      std::cout<<"Loaded deep feature extractor from "<<path_to_model<<"\n";
     }
     catch (const c10::Error& e) {
       std::cerr << "error loading the model\n";
@@ -234,32 +237,37 @@ torch::Tensor matToTensor(const cv::Mat &image)
     return torch::from_blob(image.data, dims, isChar ? torch::kChar : torch::kFloat).to(torch::kFloat);
 }
 
-void GCNExtractor::operator()( InputArray _image, InputArray _mask, vector<KeyPoint>& _keypoints, OutputArray _descriptors)
+void KP2DExtractor::detect(const cv::Mat& image, const cv::Mat& mask, std::vector<cv::KeyPoint>& keypoints,
+                           cv::Mat& descriptors, float conf_thresh)
 { 
+    std::cout<<"Loading Model from "<<path_to_model_<<"\n";
+    torch::jit::script::Module module = torch::jit::load(path_to_model_);
+    module.to(torch::kCUDA);
+    module.eval();
     torch::DeviceType device_type;
     device_type = torch::kCUDA;
     torch::Device device(device_type);
-
-    if(_image.empty())
+    if(image.empty())
         return;
 
-    Mat image = _image.getMat();
     assert(image.type() == CV_8UC3);
 
-    int img_org_width = image.cols;
-    int img_org_height = image.rows;
-    int img_width = 320;
-    int img_height = 256;
-    float ratio_width = float(img_org_width) / float(img_width);
-    float ratio_height = float(img_org_height) / float(img_height);
+    const int img_org_width = image.cols;
+    const int img_org_height = image.rows;
+    const int img_width = 320;
+    const int img_height = 240;
+    const float ratio_width = float(img_org_width) / float(img_width);
+    const float ratio_height = float(img_org_height) / float(img_height);
+    cv::Mat resized_img;
+    cv::resize(image, resized_img, cv::Size(img_width, img_height));
 
-    cv::resize(image, image, cv::Size(img_width, img_height));
-
+    cv::imshow("Image in detector", resized_img);
+    cv::waitKey(1);
     cv::Mat img;
-    image.convertTo(img, CV_32FC3, 1.f / 255.f , 0);
+    resized_img.convertTo(img, CV_32FC3, 1.f / 255.f , 0);
 
-    int border = 1;
-    int dist_thresh = 1;
+    const int border = 5;
+    const int dist_thresh = 5;
 
     auto img_var = matToTensor(img);
 
@@ -267,6 +275,9 @@ void GCNExtractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     img_var.unsqueeze_(0);
     img_var.sub_(0.5);
     img_var.mul_(0.225);
+    // to gray
+    img_var = img_var.mean(1);
+    img_var.unsqueeze_(1);
 
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(img_var.to(device));
@@ -281,7 +292,7 @@ void GCNExtractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     auto coord_ = output->elements()[1].toTensor().view({2, Hc, Wc}).view({2, -1}).t().to(torch::kCPU).squeeze();
     auto desc_ = desc.view({C, Hc, Wc}).view({C, -1}).t().to(torch::kCPU).squeeze();
 
-    auto boolean_selector = (score_ > 0.1).squeeze();
+    auto boolean_selector = (score_ > conf_thresh).squeeze();
     auto score_f = score_.index({boolean_selector});
     auto coord_f = coord_.index({boolean_selector, torch::indexing::Slice()});
     auto desc_f = desc_.index({boolean_selector, torch::indexing::Slice()});
@@ -302,7 +313,7 @@ void GCNExtractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
         float* dsc_ptr = desc_mat.ptr<float>(k);
         for (int i = 0; i < C; i++){
             bit = i%8;
-            int b = dsc_ptr[i] > 0.f;
+            int b = dsc_ptr[i];
             if (bit == 0) {
                 val = b;
             } else {
@@ -315,17 +326,8 @@ void GCNExtractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
             }
         }
     }
-
-    std::vector<cv::KeyPoint> keypoints;
-    cv::Mat descriptors;
-
-    nms(pts_mat, final_desc, score_mat, keypoints, descriptors, border, dist_thresh, img_width, img_height, ratio_width, ratio_height);
-
-    _keypoints.insert(_keypoints.end(), keypoints.begin(), keypoints.end());
-
-    int nkeypoints = keypoints.size();
-    _descriptors.create(nkeypoints, descriptors.cols, CV_8UC1);
-    descriptors.copyTo(_descriptors.getMat());
+    nms(pts_mat, final_desc, score_mat, keypoints, descriptors,
+        border, dist_thresh, img_width, img_height, ratio_width, ratio_height);
 }
 
 } //namespace ORB_SLAM

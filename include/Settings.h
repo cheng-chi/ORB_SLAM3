@@ -99,8 +99,8 @@ namespace ORB_SLAM3 {
         float initThFAST() {return initThFAST_;}
         float minThFAST() {return minThFAST_;}
         float scaleFactor() {return scaleFactor_;}
-        bool useGCNExtractor() {return useGCNv2_;}
-        std::string gcnModelpath() {return gcnModelPath_;}
+        bool useKP2DExtractor() {return useKP2D_;}
+        std::string kp2dModelpath() {return kp2dModelPath_;}
 
         float keyFrameSize() {return keyFrameSize_;}
         float keyFrameLineWidth() {return keyFrameLineWidth_;}
@@ -152,7 +152,7 @@ namespace ORB_SLAM3 {
         void readIMU(cv::FileStorage& fSettings);
         void readRGBD(cv::FileStorage& fSettings);
         void readORB(cv::FileStorage& fSettings);
-        void readGCN(cv::FileStorage& fSettings);
+        void readKP2D(cv::FileStorage& fSettings);
         void readViewer(cv::FileStorage& fSettings);
         void readLoadAndSave(cv::FileStorage& fSettings);
         void readOtherParameters(cv::FileStorage& fSettings);
@@ -208,8 +208,8 @@ namespace ORB_SLAM3 {
         float scaleFactor_;
         int nLevels_;
         int initThFAST_, minThFAST_;
-        bool useGCNv2_ = false;
-        std::string gcnModelPath_ = "";
+        bool useKP2D_ = false;
+        std::string kp2dModelPath_ = "";
         /*
          * Viewer stuff
          */

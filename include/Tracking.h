@@ -32,7 +32,7 @@
 #include "ORBVocabulary.h"
 #include "KeyFrameDatabase.h"
 #include "ORBextractor.h"
-#include "GCNExtractor.h"
+#include "KP2DExtractor.h"
 #include "MapDrawer.h"
 #include "System.h"
 #include "ImuTypes.h"
@@ -262,8 +262,8 @@ protected:
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
     ORBextractor* mpIniORBextractor;
 
-    //GCN
-    GCNExtractor* mpGCNExtractor;
+    //KP2D
+    KP2DExtractor* mpKP2DExtractor;
 
     //BoW
     ORBVocabulary* mpORBVocabulary;

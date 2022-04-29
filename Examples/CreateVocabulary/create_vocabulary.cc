@@ -16,7 +16,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "GCNExtractor.h"
+#include "KP2DExtractor.h"
 
 using namespace std;
 using namespace torch::indexing;
@@ -111,16 +111,6 @@ void loadFeatures(vector<vector<cv::Mat > > &features, cv::Mat descriptors);
 void changeStructure(const cv::Mat &plain, vector<cv::Mat> &out);
 void createVocabularyFile(OrbVocabulary &voc, std::string &fileName, const vector<vector<cv::Mat > > &features);
 
-// ----------------------------------------------------------------------------
-// Convert a char/float mat to torch Tensor
-torch::Tensor matToTensor(const cv::Mat &image)
-{
-    bool isChar = (image.type() & 0xF) < 2;
-    std::vector<int64_t> dims = {image.rows, image.cols, image.channels()};
-    return torch::from_blob(image.data, dims, isChar ? torch::kChar : torch::kFloat).to(torch::kFloat);
-}
-
-
 int main(int argc, char *argv[])
 {
 
@@ -133,13 +123,12 @@ int main(int argc, char *argv[])
     device_type = torch::kCUDA;
     torch::Device device(device_type);
 
-    ORB_SLAM3::GCNExtractor gcn_extractor(
+    ORB_SLAM3::KP2DExtractor kp2d_extractor(
                 1000, 1.2, 8, 10, 10, argv[3]);
 
     vector<cv::String> fn;
     cv::glob(std::string(argv[2])+"/*.jpg", fn, false);
 
-    //fn.push_back("/home/steffen/Downloads/val2017/000000000785.jpg");
     size_t count = fn.size(); 
 
     vector<vector<cv::Mat > > features;
@@ -168,15 +157,18 @@ int main(int argc, char *argv[])
             }
 
             int img_width = 320;
-            int img_height = 256;
+            int img_height = 240;
             // avoid upsampling
             if (image_now.cols < img_width || image_now.rows < img_height) {
                 continue;
             }
-            cv::cvtColor(image_now, image_now, cv::COLOR_BGR2RGB);
+
             cv::Mat descriptors;
             vector<cv::KeyPoint> keypoints;
-            gcn_extractor.operator()(image_now, cv::Mat(), keypoints, descriptors);
+            kp2d_extractor.detect(image_now, cv::Mat(), keypoints, descriptors, 0.2f);
+            cv::drawKeypoints(image_now, keypoints, image_now);
+            cv::imshow("features", image_now);
+            cv::waitKey(1);
             loadFeatures(features, descriptors);
         }
     }

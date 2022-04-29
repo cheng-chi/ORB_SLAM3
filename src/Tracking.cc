@@ -591,8 +591,8 @@ void Tracking::newParameterLoader(Settings *settings) {
     int fIniThFAST = settings->initThFAST();
     int fMinThFAST = settings->minThFAST();
     float fScaleFactor = settings->scaleFactor();
-    if (settings->useGCNExtractor()) {
-        mpGCNExtractor = new GCNExtractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST, settings->gcnModelpath());
+    if (settings->useKP2DExtractor()) {
+        mpKP2DExtractor = new KP2DExtractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST, settings->kp2dModelpath());
         mbUseDeepFeatures = true;
     } else {
         mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
@@ -1284,15 +1284,20 @@ bool Tracking::ParseORBParamFile(cv::FileStorage &fSettings)
     {
         return false;
     }
+    node = fSettings["ORBextractor.useKP2D"];
+    if (!node.empty() && node.isInt()) {
+        mpKP2DExtractor = new KP2DExtractor(nFeatures,fScaleFactor,nLevels,
+                fIniThFAST,fMinThFAST, fSettings["ORBextractor.kp2dModelPath"]);
+        mbUseDeepFeatures = true;
+    } else {
+        mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
-    mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+        if(mSensor==System::STEREO || mSensor==System::IMU_STEREO)
+            mpORBextractorRight = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
-    if(mSensor==System::STEREO || mSensor==System::IMU_STEREO)
-        mpORBextractorRight = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
-
-    if(mSensor==System::MONOCULAR || mSensor==System::IMU_MONOCULAR)
-        mpIniORBextractor = new ORBextractor(5*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
-
+        if(mSensor==System::MONOCULAR || mSensor==System::IMU_MONOCULAR)
+            mpIniORBextractor = new ORBextractor(5*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+    }
     cout << endl << "ORB Extractor Parameters: " << endl;
     cout << "- Number of Features: " << nFeatures << endl;
     cout << "- Scale Levels: " << nLevels << endl;
@@ -1589,13 +1594,13 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &times
     {
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET ||(lastID - initID) < mMaxFrames) {
             if (mbUseDeepFeatures)
-                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+                mCurrentFrame = Frame(mImGray,timestamp,mpKP2DExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
             else
                 mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
         }
         else {
             if (mbUseDeepFeatures)
-                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+                mCurrentFrame = Frame(mImGray,timestamp,mpKP2DExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
             else
                 mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
         }
@@ -1606,18 +1611,21 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &times
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
         {
             if (mbUseDeepFeatures)
-                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+                mCurrentFrame = Frame(mImGray,timestamp,mpKP2DExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
             else
                 mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
         }
         else {
             if (mbUseDeepFeatures)
-                mCurrentFrame = Frame(mImGray,timestamp,mpGCNExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+                mCurrentFrame = Frame(mImGray,timestamp,mpKP2DExtractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
             else
                 mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
         }
     }
-
+    cv::Mat drawImg;
+    cv::drawKeypoints(mImGray, mCurrentFrame.mvKeys, drawImg);
+    cv::imshow("drawImg",drawImg);
+    cv::waitKey(1);
     if (mState==NO_IMAGES_YET)
         t0=timestamp;
 

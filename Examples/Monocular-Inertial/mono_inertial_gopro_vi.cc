@@ -51,15 +51,6 @@ int main(int argc, char **argv) {
   vector<cv::Point3f> vAcc, vGyr;
   LoadTelemetry(argv[4], imuTimestamps, vAcc, vGyr);
 
-  // open settings to get image resolution
-  cv::FileStorage fsSettings(argv[2], cv::FileStorage::READ);
-  if(!fsSettings.isOpened()) {
-     cerr << "Failed to open settings file at: " << argv[2] << endl;
-     exit(-1);
-  }
-  cv::Size img_size(fsSettings["Camera.width"],fsSettings["Camera.height"]);
-  fsSettings.release();
-
   // Retrieve paths to images
   vector<double> vTimestamps;
   // Create SLAM system. It initializes all system threads and gets ready to
@@ -97,8 +88,6 @@ int main(int argc, char **argv) {
       im_track = im.clone();
       double tframe = cap.get(cv::CAP_PROP_POS_MSEC) * MS_TO_S;
       ++img_id;
-
-      cv::resize(im_track, im_track, img_size);
 
       // gather imu measurements between frames
       // Load imu measurements from previous frame
