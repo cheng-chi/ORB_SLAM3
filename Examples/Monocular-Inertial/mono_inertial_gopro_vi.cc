@@ -179,7 +179,7 @@ bool LoadTelemetry(const string &path_to_telemetry_file,
     file >> j;
     const auto accl = j["1"]["streams"]["ACCL"]["samples"];
     const auto gyro = j["1"]["streams"]["GYRO"]["samples"];
-    const auto gps5 = j["1"]["streams"]["GPS5"]["samples"];
+    // const auto gps5 = j["1"]["streams"]["GPS5"]["samples"];
     std::map<double, cv::Point3f> sorted_acc;
     std::map<double, cv::Point3f> sorted_gyr;
 
