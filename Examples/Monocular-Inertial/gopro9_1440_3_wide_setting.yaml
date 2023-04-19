@@ -27,13 +27,21 @@ Camera.RGB: 1
     
 # Transformation from camera to imu (body frame)
 # calibrated with OpenICC https://github.com/urbste/OpenImuCameraCalibrator
+# Tbc: !!opencv-matrix
+#    rows: 4
+#    cols: 4
+#    dt: f
+#    data: [-0.999874, 0.0142587, 0.00697631,  0.00405863, 
+#           -0.00692068, 0.00394693, -0.999968, -0.0141259,
+#           -0.0142858, -0.999891, -0.00384775, 0.000386279,
+#           0.0, 0.0, 0.0, 1.0]
 Tbc: !!opencv-matrix
    rows: 4
    cols: 4
    dt: f
-   data: [-0.999874, 0.0142587, 0.00697631,  0.00405863, 
-          -0.00692068, 0.00394693, -0.999968, -0.0141259,
-          -0.0142858, -0.999891, -0.00384775, 0.000386279,
+   data: [-0.999997, 0.00187569, 0.00184115,  -0.000269638, 
+           -0.00184106, 4.99428e-05, -0.999998, -0.00853536,
+          -0.00187578, -0.999998, -4.64894e-05, -0.00305681,
           0.0, 0.0, 0.0, 1.0]
 
 # IMU noise -> use OpenICC https://github.com/urbste/OpenImuCameraCalibrator
