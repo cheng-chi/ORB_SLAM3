@@ -1,0 +1,82 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+Camera.type: "KannalaBrandt8"
+# Camera calibration and distortion parameters (OpenICC https://github.com/urbste/OpenImuCameraCalibrator) 
+Camera.fx: 436.8746150165981 # 294.3985128655467 # 190.97847715128717
+Camera.fy: 436.8746150165981 # 294.2676587730904 # 190.9733070521226
+Camera.cx: 480.61492712261963 # 320.34104964791504 # 254.93170605935475
+Camera.cy: 273.8846198056418 # 184.26550363051686 # 256.8974428996504
+
+Camera.k1: 0.051627522992425866 # 0.053294872732181864 # 0.0034823894022493434
+Camera.k2: 0.07275765495541989 # 0.0025237988913267735 # 0.0007150348452162257
+Camera.k3: -0.09508192484537463 # 0.0478167341537329 # -0.0020532361418706202
+Camera.k4: 0.038617720567230035 # -0.042766952381336994 # 0.00020293673591811182
+
+
+# Camera resolution
+Camera.width: 960
+Camera.height: 540
+
+# Camera frames per second 
+Camera.fps: 59.94005994005994
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+    
+# Transformation from camera to imu (body frame)
+# calibrated with OpenICC https://github.com/urbste/OpenImuCameraCalibrator
+Tbc: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data: [-0.999991, 0.00254424, -0.00340529,  0.00124911 , 
+           0.00342211, 0.00663583, -0.999972, -0.0202583,
+          -0.00252158, -0.999975, -0.00664448, 0.000963832,
+          0.0, 0.0, 0.0, 1.0]
+
+# IMU noise -> use OpenICC https://github.com/urbste/OpenImuCameraCalibrator
+IMU.NoiseGyro: 0.0015 # rad/s^0.5 
+IMU.NoiseAcc: 0.017 # m/s^1.5
+IMU.GyroWalk: 5e-5 # rad/s^1.5
+IMU.AccWalk: 0.0055 # m/s^2.5
+IMU.Frequency: 200
+
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1250 # Tested with 1250
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 6
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+# ORBextractor.iniThFAST: 20
+# ORBextractor.minThFAST: 7
+ORBextractor.iniThFAST: 20 # 20
+ORBextractor.minThFAST: 7 # 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3
+Viewer.ViewpointX: 0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5 # -1.8
+Viewer.ViewpointF: 500
