@@ -37,7 +37,7 @@ Tbc: !!opencv-matrix
 # IMU noise -> use OpenICC https://github.com/urbste/OpenImuCameraCalibrator
 IMU.NoiseGyro: 0.0015 # rad/s^0.5 
 IMU.NoiseAcc: 0.017 # m/s^1.5
-IMU.GyroWalk: 5e-5 # rad/s^1.5
+IMU.GyroWalk: 5.0e-5 # rad/s^1.5
 IMU.AccWalk: 0.0055 # m/s^2.5
 IMU.Frequency: 200
 
