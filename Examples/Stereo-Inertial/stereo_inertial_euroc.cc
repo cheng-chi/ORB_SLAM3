@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 
 
 #ifdef REGISTER_TIMES
-    #ifdef COMPILEDWITHC11
+    #ifdef COMPILEDWITHC14
             std::chrono::steady_clock::time_point t_Start_Rect = std::chrono::steady_clock::now();
     #else
             std::chrono::monotonic_clock::time_point t_Start_Rect = std::chrono::monotonic_clock::now();
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
             cv::remap(imRight,imRightRect,M1r,M2r,cv::INTER_LINEAR);
 
 #ifdef REGISTER_TIMES
-    #ifdef COMPILEDWITHC11
+    #ifdef COMPILEDWITHC14
             std::chrono::steady_clock::time_point t_End_Rect = std::chrono::steady_clock::now();
     #else
             std::chrono::monotonic_clock::time_point t_End_Rect = std::chrono::monotonic_clock::now();
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
                     first_imu[seq]++;
                 }
 
-    #ifdef COMPILEDWITHC11
+    #ifdef COMPILEDWITHC14
             std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     #else
             std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
             // Pass the images to the SLAM system
             SLAM.TrackStereo(imLeftRect,imRightRect,tframe,vImuMeas);
 
-    #ifdef COMPILEDWITHC11
+    #ifdef COMPILEDWITHC14
             std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
     #else
             std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
