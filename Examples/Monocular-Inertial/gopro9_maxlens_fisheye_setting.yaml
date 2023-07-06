@@ -5,10 +5,14 @@
 #--------------------------------------------------------------------------------------------
 Camera.type: "KannalaBrandt8"
 # Camera calibration and distortion parameters (OpenICC https://github.com/urbste/OpenImuCameraCalibrator) 
-Camera.fx: 188.60460651 # 190.97847715128717
-Camera.fy: 188.60460651 # 190.9733070521226
-Camera.cx: 320.57432535 # 254.93170605935475
-Camera.cy: 239.40467006 # 256.8974428996504
+# Camera.fx: 188.60460651 # 190.97847715128717
+# Camera.fy: 188.60460651 # 190.9733070521226
+# Camera.cx: 320.57432535 # 254.93170605935475
+# Camera.cy: 239.40467006 # 256.8974428996504
+Camera.fx: 796.8544625226342 # 190.97847715128717
+Camera.fy: 796.8544625226342 # 190.9733070521226
+Camera.cx: 1354.4265245977356 # 254.93170605935475
+Camera.cy: 1011.4847310011687 # 256.8974428996504
 
 Camera.k1: -0.02196117964405394 # 0.0034823894022493434
 Camera.k2: -0.018959717016668237 # 0.0007150348452162257
@@ -16,11 +20,11 @@ Camera.k3: 0.001693880829392453 # -0.0020532361418706202
 Camera.k4: -0.00016807228608000285 # 0.00020293673591811182
 
 # Camera resolution
-Camera.width: 640
-Camera.height: 480
+Camera.width: 2704
+Camera.height: 2028
 
 # Camera frames per second 
-Camera.fps: 25.0
+Camera.fps: 60.0
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
@@ -35,6 +39,22 @@ Tbc: !!opencv-matrix
            0.00710551,  0.00553032 ,  -0.999959, -0.0267601,
           0.00214264 ,  -0.999982, -0.00551522, -0.000306161,
           0.0, 0.0, 0.0, 1.0]
+#    data: [0.005544023672043089,
+#         -0.9999436573498625,
+#         0.0090523989806302,
+#         -0.02067571346578389,
+#         0.9999738066795882,
+#         0.005501615020084289,
+#         -0.004702997650872328,
+#         0.0002864388189755026,
+#         0.004652929857321458,
+#         0.009078235398549206,
+#         0.9999479665891574,
+#         0.005031941915866327,
+#         0.0,
+#         0.0,
+#         0.0,
+#         1.0]
  
 # IMU noise -> use OpenICC https://github.com/urbste/OpenImuCameraCalibrator
 IMU.NoiseGyro: 0.0015 # rad/s^0.5 
@@ -49,13 +69,13 @@ IMU.Frequency: 200
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 1250 # Tested with 1250
+ORBextractor.nFeatures: 5000 # Tested with 1250
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2
 
 # ORB Extractor: Number of levels in the scale pyramid	
-ORBextractor.nLevels: 6
+ORBextractor.nLevels: 10
 
 # ORB Extractor: Fast threshold
 # Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
