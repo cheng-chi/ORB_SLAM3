@@ -1791,6 +1791,10 @@ void Tracking::Track()
             if(bOK)
             {
                 bOK = TrackLocalMap();
+                if (!bOK){
+                    cout << "TrackLocalMap returned false" << endl;
+                }
+                
             }
             if(!bOK){
                 cout << "Fail to track local map!" << endl;
@@ -2560,10 +2564,13 @@ bool Tracking::TrackWithMotionModel()
     if(nmatches<20)
     {
         Verbose::PrintMess("Not enough matches!!", Verbose::VERBOSITY_NORMAL);
-        if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD)
+        if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) {
+            cout << "TrackWithMotionModel return true line 2568" << endl;
             return true;
-        else
+        } else {
+            cout << "TrackWithMotionModel return false line 2571" << endl;
             return false;
+        }
     }
 
     // Optimize frame pose with all matches
@@ -2691,9 +2698,13 @@ bool Tracking::TrackLocalMap()
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
     mpLocalMapper->mnMatchesInliers=mnMatchesInliers;
-    if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
+    if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<20){
+        cout << "TrackLocalMap return false line 2695" << endl;
+        cout << "mnMatchesInliers=" << mnMatchesInliers << endl;
+        cout << "mCurrentFrame.mnId=" << mCurrentFrame.mnId << " mnLastRelocFrameId+mMaxFrames=" << mnLastRelocFrameId+mMaxFrames << endl;
         return false;
-
+    }
+        
     if((mnMatchesInliers>10)&&(mState==RECENTLY_LOST))
         return true;
 
@@ -2702,6 +2713,7 @@ bool Tracking::TrackLocalMap()
     {
         if((mnMatchesInliers<15 && mpAtlas->isImuInitialized())||(mnMatchesInliers<50 && !mpAtlas->isImuInitialized()))
         {
+            cout << "TrackLocalMap return false line 2707" << endl;
             return false;
         }
         else
@@ -2711,6 +2723,7 @@ bool Tracking::TrackLocalMap()
     {
         if(mnMatchesInliers<15)
         {
+            cout << "TrackLocalMap return false line 2717" << endl;
             return false;
         }
         else
@@ -2718,10 +2731,12 @@ bool Tracking::TrackLocalMap()
     }
     else
     {
-        if(mnMatchesInliers<30)
+        if(mnMatchesInliers<30){
+            cout << "TrackLocalMap return false line 2726" << endl;
             return false;
-        else
+        }else{
             return true;
+        }
     }
 }
 

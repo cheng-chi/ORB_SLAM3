@@ -42,6 +42,7 @@ namespace ORB_SLAM3
 
     int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoints, const float th, const bool bFarPoints, const float thFarPoints)
     {
+        cout << "ORBmatcher::SearchByProjection" << endl;
         int nmatches=0, left = 0, right = 0;
 
         const bool bFactor = th!=1.0;
@@ -222,6 +223,7 @@ namespace ORB_SLAM3
 
     int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
     {
+        cout << "ORBmatcher::SearchByBoW" << endl;
         const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
 
         vpMapPointMatches = vector<MapPoint*>(F.N,static_cast<MapPoint*>(NULL));
