@@ -110,7 +110,10 @@ namespace ORB_SLAM3
         threadF.join();
 
         // Compute ratio of scores
-        if(SH+SF == 0.f) return false;
+        if(SH+SF == 0.f) {
+            cout << "Reconsruct returned false, line 114." << endl;
+            return false;
+        }
         float RH = SH/(SH+SF);
 
         float minParallax = 1.0;
@@ -118,12 +121,12 @@ namespace ORB_SLAM3
         // Try to reconstruct from homography or fundamental depending on the ratio (0.40-0.45)
         if(RH>0.50) // if(RH>0.40)
         {
-            //cout << "Initialization from Homography" << endl;
+            cout << "Initialization from Homography" << endl;
             return ReconstructH(vbMatchesInliersH,H, mK,T21,vP3D,vbTriangulated,minParallax,50);
         }
         else //if(pF_HF>0.6)
         {
-            //cout << "Initialization from Fundamental" << endl;
+            cout << "Initialization from Fundamental" << endl;
             return ReconstructF(vbMatchesInliersF,F,mK,T21,vP3D,vbTriangulated,minParallax,50);
         }
     }
@@ -504,7 +507,7 @@ namespace ORB_SLAM3
 
         int maxGood = max(nGood1,max(nGood2,max(nGood3,nGood4)));
 
-        int nMinGood = max(static_cast<int>(0.9*N),minTriangulated);
+        int nMinGood = max(static_cast<int>(0.7*N),minTriangulated);
 
         int nsimilar = 0;
         if(nGood1>0.7*maxGood)
@@ -519,6 +522,8 @@ namespace ORB_SLAM3
         // If there is not a clear winner or not enough triangulated points reject initialization
         if(maxGood<nMinGood || nsimilar>1)
         {
+            cout << "ReconstructF returned false, line 525" << endl;
+            cout << "maxGood=" << maxGood << " nMinGood=" << nMinGood << " nsimilar=" << nsimilar << endl;
             return false;
         }
 
@@ -565,6 +570,8 @@ namespace ORB_SLAM3
             }
         }
 
+        cout << "ReconstructF returned false, line 572" << endl;
+        cout << "maxGood=" << maxGood << " nGood1=" << nGood1 << " nGood2=" << nGood2 << " nGood3=" << nGood3 << " nGood4" << nGood4 << endl;
         return false;
     }
 
@@ -596,6 +603,7 @@ namespace ORB_SLAM3
 
         if(d1/d2<1.00001 || d2/d3<1.00001)
         {
+            cout << "ReconstructH returned false line 602" << endl;
             return false;
         }
 
@@ -722,6 +730,8 @@ namespace ORB_SLAM3
         }
 
 
+        cout << "secondBestGood=" << secondBestGood << " bestParallax=" << bestParallax << " minParallax" << minParallax;
+        cout << " bestGood" << bestGood << " minTriangulated" << minTriangulated << endl;
         if(secondBestGood<0.75*bestGood && bestParallax>=minParallax && bestGood>minTriangulated && bestGood>0.9*N)
         {
             T21 = Sophus::SE3f(vR[bestSolutionIdx], vt[bestSolutionIdx]);
@@ -730,6 +740,7 @@ namespace ORB_SLAM3
             return true;
         }
 
+        cout << "ReconstructH returned false line 737" << endl;
         return false;
     }
 
