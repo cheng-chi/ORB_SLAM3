@@ -634,7 +634,14 @@ void System::SaveTrajectoryCSV(const string &filename)
 
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
-    Sophus::SE3f Two = vpKFs[0]->GetPoseInverse();
+    //Sophus::SE3f Two = vpKFs[0]->GetPoseInverse();
+
+    // maintain map's rotation which contains gravity information
+    Sophus::SE3f Tow = vpKFs[0]->GetPose();
+    // maintains first keypoint's row and pitch, setting yaw to 0.
+    // TODO: is this correct?
+    Tow.setRotationMatrix(Sophus::SO3f::rotX(Tow.so3().angleX()) * Sophus::SO3f::rotX(Tow.so3().angleX()));
+    Sophus::SE3f Two = Tow.inverse();
 
     // open file
     ofstream f;
