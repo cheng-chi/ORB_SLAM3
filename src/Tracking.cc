@@ -3333,6 +3333,7 @@ bool Tracking::Relocalization()
     }
 
     const int nKFs = vpCandidateKFs.size();
+    cout << "nKFs=" << nKFs << endl;
 
     // We perform first an ORB matching with each candidate
     // If enough matches are found we setup a PnP solver
@@ -3364,6 +3365,14 @@ bool Tracking::Relocalization()
             }
             else
             {
+                cout << "nmatches=" << nmatches << " i=" << i << " vvpMapPointMatches[i].size()=" << vvpMapPointMatches[i].size() << endl;
+                // vvpMapPointMatches and nmatches are exaclty the same with/without enable_gui
+                // for(auto map_point: vvpMapPointMatches[i]){
+                //     if(map_point == nullptr){
+                //         continue;
+                //     }
+                //     cout << "map_point->mnId=" << map_point->mnId << endl;
+                // }
                 MLPnPsolver* pSolver = new MLPnPsolver(mCurrentFrame,vvpMapPointMatches[i]);
                 pSolver->SetRansacParameters(0.99,10,300,6,0.5,5.991);  //This solver needs at least 6 points
                 vpMLPnPsolvers[i] = pSolver;
@@ -3371,10 +3380,12 @@ bool Tracking::Relocalization()
             }
         }
     }
+    cout << "Relocalization() nCandidates=" << nCandidates << endl;
 
     // Alternatively perform some iterations of P4P RANSAC
     // Until we found a camera pose supported by enough inliers
     bool bMatch = false;
+    int maxngood = 0;
     ORBmatcher matcher2(0.9,true);
 
     while(nCandidates>0 && !bMatch)
@@ -3393,6 +3404,9 @@ bool Tracking::Relocalization()
             Eigen::Matrix4f eigTcw;
             bool bTcw = pSolver->iterate(5,bNoMore,vbInliers,nInliers, eigTcw);
 
+            cout << "nInliers=" << nInliers << endl;
+            cout << "bNoMore=" << bNoMore << endl; 
+
             // If Ransac reachs max. iterations discard keyframe
             if(bNoMore)
             {
@@ -3410,6 +3424,7 @@ bool Tracking::Relocalization()
                 set<MapPoint*> sFound;
 
                 const int np = vbInliers.size();
+                cout << "np=" << np << endl;
 
                 for(int j=0; j<np; j++)
                 {
@@ -3423,6 +3438,7 @@ bool Tracking::Relocalization()
                 }
 
                 int nGood = Optimizer::PoseOptimization(&mCurrentFrame);
+                maxngood = max(maxngood, nGood);
 
                 if(nGood<10)
                     continue;
@@ -3463,7 +3479,7 @@ bool Tracking::Relocalization()
                     }
                 }
 
-
+                maxngood = max(maxngood, nGood);
                 // If the pose is supported by enough inliers stop ransacs and continue
                 if(nGood>=50)
                 {
@@ -3473,6 +3489,8 @@ bool Tracking::Relocalization()
             }
         }
     }
+
+    cout << "Relocalization() maxngood=" << maxngood << endl;
 
     if(!bMatch)
     {

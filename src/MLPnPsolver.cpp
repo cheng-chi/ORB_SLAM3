@@ -147,6 +147,7 @@ namespace ORB_SLAM3 {
 
 	        // Compute camera pose
             computePose(bearingVecs,p3DS,covs,indexes,result);
+            cout << "result=" << result << endl;
 
             //Save result
             mRi[0][0] = result(0,0);
@@ -267,13 +268,16 @@ namespace ORB_SLAM3 {
             point_t p = mvP3Dw[i];
             cv::Point3f P3Dw(p(0),p(1),p(2));
             cv::Point2f P2D = mvP2D[i];
+            // cout << "P2D.x=" << P2D.x << " P2D.y=" << P2D.y << endl;
 
             float xc = mRi[0][0]*P3Dw.x+mRi[0][1]*P3Dw.y+mRi[0][2]*P3Dw.z+mti[0];
             float yc = mRi[1][0]*P3Dw.x+mRi[1][1]*P3Dw.y+mRi[1][2]*P3Dw.z+mti[1];
             float zc = mRi[2][0]*P3Dw.x+mRi[2][1]*P3Dw.y+mRi[2][2]*P3Dw.z+mti[2];
 
+            // cout << "xc=" << xc << " yc=" << yc << " zc=" << zc << endl;
             cv::Point3f P3Dc(xc,yc,zc);
             cv::Point2f uv = mpCamera->project(P3Dc);
+            // cout << "uv.x=" << uv.x << " uv.y=" << uv.y << endl; 
 
             float distX = P2D.x-uv.x;
             float distY = P2D.y-uv.y;
@@ -290,6 +294,8 @@ namespace ORB_SLAM3 {
                 mvbInliersi[i]=false;
             }
         }
+        // cout << "mnInliersi=" << mnInliersi << endl;
+        // sleep(1.0);
     }
 
     bool MLPnPsolver::Refine(){
