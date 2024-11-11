@@ -226,9 +226,9 @@ int main(int argc, char **argv) {
     }
 
     // apply mask image if loaded
-    if (!mask_img.empty()) {
-      im_track.setTo(cv::Scalar(0,0,0), mask_img);
-    }
+    // if (!mask_img.empty()) {
+    //   im_track.setTo(cv::Scalar(0,0,0), mask_img);
+    // }
 
     // gather imu measurements between frames
     // Load imu measurements from previous frame
@@ -245,8 +245,8 @@ int main(int argc, char **argv) {
         std::chrono::steady_clock::now();
 
     // Pass the image to the SLAM system
-    auto result = SLAM.LocalizeMonocular(im_track, tframe, vImuMeas);
-
+    // auto result = SLAM.LocalizeMonocular(im_track, tframe, vImuMeas); 
+    auto result = SLAM.LocalizeMonocular(im_track, mask_img, tframe, vImuMeas);
     // check lost frames
     if (! result.second){
         n_lost_frames += 1;

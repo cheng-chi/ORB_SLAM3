@@ -132,6 +132,8 @@ public:
     // Returns the camera pose (empty if tracking fails).
     std::pair<Sophus::SE3f, bool> LocalizeMonocular(const cv::Mat &im, const double &timestamp, const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(), string filename="");
 
+    std::pair<Sophus::SE3f, bool> LocalizeMonocular(const cv::Mat &im,const cv::Mat &mask, const double &timestamp, const vector<IMU::Point>& vImuMeas= vector<IMU::Point>(), string filename="");
+
     // This stops local mapping thread (map building) and performs only camera tracking.
     void ActivateLocalizationMode();
     // This resumes local mapping thread and performs SLAM again.
